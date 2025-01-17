@@ -2,13 +2,13 @@
 
 Writing production-ready Dockerfiles is not as simple as you could think about it. 
 
-This repository contains some best-practices for writing Dockerfiles. Even though there is plentora of articles describing best practices, some of them are outdated or lack lesser known details - this repo aims to breach that gap. 
-This is all guidance, not a mandate - there may sometimes be reasons to not do what is described here, but if you _don't know_ then this is probably what you should be doing.
+This repository contains some best practices for writing Dockerfiles. Even though plenty of articles describe best practices, some of them are outdated or lack lesser-known details - this repo aims to breach that gap. 
+This is all guidance, not a mandate - there may sometimes be reasons not to do what is described here, but if you _don't know_ then this is probably what you should be doing.
 
 ### Disclaimer ⚠️
 ___
-This is a compilation of best practices learned during my short career, read online and in books. If you find mistakes or would like to add/ clarify something feel free to create pull request.  
-Throughout this file you will find the following ❌ **Bad:** and ✅ **Good:**. Using the approach listed under *Bad* isn't necessarily a mistake, but it's less optimal than *Good*.
+This is a compilation of best practices learned during my short career, read online and in books. If you find mistakes or would like to add/ clarify something feel free to create a pull request.  
+Throughout this file, you will find the following ❌ **Bad:** and ✅ **Good:**. Using the approach listed under *Bad* isn't necessarily a mistake, but it's less optimal than *Good*.
 
 ## List of Content 📋
 
@@ -16,7 +16,7 @@ The following are included in the Dockerfile in this repository:
 
 1. [Use official Docker images whenever possible](#1-use-official-docker-images-whenever-possible)
 2. [Limit Image Layers](#2-limit-image-layers)
-3. [Do NOT use `latest` tag, choose specific image tag](#3-do-not-use-latest-tag-choose-specific-image-tag)
+3. [Do NOT use the `latest` tag, choose a specific image tag](#3-do-not-use-latest-tag-choose-specific-image-tag)
 4. [Only Store Arguments in `CMD` (cmd vs entrypoint)](#4-only-store-arguments-in-cmd-cmd-vs-entrypoint)
 5. [Use `COPY` instead of `ADD`](#5-use-copy-instead-of-add)
 6. [Combine `apt-get update` and `apt-get install`](#6-combine-apt-get-update-and-apt-get-install)
@@ -29,7 +29,7 @@ The following are included in the Dockerfile in this repository:
 13. [Use `.dockerignore`](#13-use-dockerignore)
 14. [Set `WORKDIR` explicitly](#14-set-workdir-explicitly)
 15. [Use Build time arguments for flexibility](#15-use-build-time-arguments-for-flexibility)
-16. [Use `--chmod` in `COPY` instead of seperate `RUN`](#16-use---chmod-in-copy-instead-of-seperate-run)
+16. [Use `--chmod` in `COPY` instead of separate `RUN`](#16-use---chmod-in-copy-instead-of-separate-run)
 17. [Use `--no-install-recommends` (🐍-specific)](#17-use---no-install-recommends--specific)
 18. [Common performance optimizations](#18-common-performance-optimizations)
 19. [Add metadata labels for better image management](#19-add-metadata-labels-for-better-image-management)
@@ -60,10 +60,10 @@ RUN apt-get clean
 > **Tip**: Use `&&` to chain commands and a single `RUN` block for efficiency.  
 > **Tip2**: Order the layers from one that is less likely to change, to one that will change more often.
 
-## 3. Do NOT use `latest` tag, choose specific image tag
-Using latest can lead to unpredictable behavior when the base image updates. If you don’t specify a specific version or tag in your Dockerfile, it will default to using the latest version of the image.
+## 3. Do NOT use the `latest` tag, choose a specific image tag
+Using the latest can lead to unpredictable behavior when the base image updates. If you don’t specify a specific version or tag in your Dockerfile, it will default to using the latest version of the image.
 
-> **Note :  Specifying a version ensures consistency but requires manual updates to benefit from the latest security patches.**
+> **Note:  Specifying a version ensures consistency but requires manual updates to benefit from the latest security patches.**
 
 ✅ **Good:**
 ```dockerfile
@@ -123,18 +123,18 @@ ADD ./app /app/  # Use COPY instead
 ## 6. Combine `apt-get update` and `apt-get install`
 
 __Prerequistite__ - *Package Index Files*  
-Package index files are metadata files maintained by a package management system (such as `apt` in Debian-based systems) that contain information about the available software packages i.e: package names, versions, dependancies and sources.  
-These files are essential for package updates. On devian based systems they are located in `/var/lib/apt/lists/`
+Package index files are metadata files maintained by a package management system (such as `apt` in Debian-based systems) that contain information about the available software packages i.e.: package names, versions, dependencies, and sources.  
+These files are essential for package updates. On Debian-based systems, they are located in `/var/lib/apt/lists/`
 
 __General Rule__
 Always combine `apt-get update` with `apt-get install` to ensure you're installing the latest available packages.
 
 The `apt-get update` command fetches the latest package lists. These lists contain information about the available packages and their versions and are stored in that cache layer.
-If you run `apt-get install` in a new `RUN` command the package index from previous layer is no longer accessible during installation, meaning it will use an outdated package index leading to:
+If you run `apt-get install` in a new `RUN` command the package index from the previous layer is no longer accessible during installation, meaning it will use an outdated package index leading to:
 - Installing outdated packages
-- Dependancy failures
+- Dependency failures
 
->**Remember** Every `RUN` line in Dockerfile is a different process.
+>**Remember** Every `RUN` line in the Dockerfile is a different process.
 
 ✅ **Good:**
 ```dockerfile
@@ -148,7 +148,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends\
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends package1 package2 && rm -rf /var/lib/apt/lists/*
 ```
->**Tip** To reduce the image size, remove the packge index files after installation using: `rm -rf /var/lib/apt/lists/*`
+>**Tip** To reduce the image size, remove the package index files after installation using: `rm -rf /var/lib/apt/lists/*`
 
 ## 7. Run as a Non-Root User
 Running containers with a non-root user is a critical security best practice that helps prevent container breakout attacks and limits potential damage from compromised applications.
@@ -158,7 +158,7 @@ Running containers with a non-root user is a critical security best practice tha
 __Key points:__
 - Create a dedicated user and group with specific IDs
 - Set up directory structure and permissions before switching users
-- Use `--chown` flag with `COPY` command to maintain correct ownership
+- Use `--chown` flag with the `COPY` command to maintain correct ownership
 - Apply minimal required permissions 
 - Switch to non-root user
 
@@ -182,7 +182,7 @@ RUN mkdir -p /app/logs /app/data /app/config && \
 COPY --chown=appuser:appgroup requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy application code with correct ownership
+# Copy the application code with the correct ownership
 COPY --chown=appuser:appgroup . .
 
 # Switch to non-root user
@@ -225,7 +225,7 @@ RUN groupadd -g 100 appuser && \
 ## 9. Use static UID and GID
 - Files and directories on a Linux system are associated with specific UIDs and GIDs, which determine who can read, write, or execute them (`rwx`).  
 - When a Docker container creates or manipulates files on a shared volume or directly on the host filesystem, the files are owned by the UID/GID of the container process that created them.
-- If container uses dynamically assigned UIDs/GIDs (the default), the container’s UID/GID could vary between builds or deployments.
+- If the container uses dynamically assigned UIDs/GIDs (the default), the container’s UID/GID could vary between builds or deployments.
 - This variation in UIDs/GIDs makes it harder to manage file ownership consistently, especially when these files need to be accessed or modified on the host system.
 
 ✅ **Good:**
@@ -241,7 +241,7 @@ RUN groupadd -g $GID appuser && \
 RUN adduser --system appuser  # Random UID/GID assigned
 ```
 
-## 10. Use multi-staged builds to reduce final image size
+## 10. Use multi-staged builds to reduce the final image size
 Multi-stage builds are a powerful technique to create smaller, more secure Docker images by separating build-time dependencies from runtime requirements.  
 Assume we have:
 ```
@@ -253,7 +253,7 @@ Assume we have:
 >**NOTE: `requirements.txt` should have dependencies versions pinned ex. `requests==2.31.0`**
 
 ✅ **Good: Single-Stage Build**
-Simple and straightforward. Includes all build tools and depandencies in the final image, resulting in larger final image size. 
+Simple. Includes all build tools and dependencies in the final image, resulting in a larger final image size. 
 ```dockerfile
 FROM python:3.12-slim
 WORKDIR /app
@@ -266,16 +266,16 @@ CMD ["python", "app.py"]
 ```
 
 🔥✅ **Better: Multi-Stage Build**
-Uses two stages, in first stage `builder` installs dependancies in virtual env, while in the second `runner` stage copies only the necessarly files.  
+Uses two stages, in the first stage `builder` installs dependencies in virtual env, while in the second `runner` stage copies only the necessary files.  
 
-**Why use virtual environment?**  
-In multi-staged builds, we need to copy dependancies from `builder` to the final `runner` stage. By default when installing Python packages they and related files are installed in various places. By using virtual env we know exactly where those dependancies are located and therefore copying them over from one stage to another is a simpler task. [Read more](https://pythonspeed.com/articles/multi-stage-docker-python/)
+**Why use a virtual environment?**  
+In multi-stage builds, we need to copy dependencies from the `builder` to the final `runner` stage. By default when installing Python packages they and related files are installed in various places. By using virtual env we know exactly where those dependancies are located and therefore copying them over from one stage to another is a simpler task. [Read more](https://pythonspeed.com/articles/multi-stage-docker-python/)
 
 ```dockerfile
 FROM python:3.12-slim as builder
 
 WORKDIR /app
-# Create virtual env in /opt/venv which isolated Python packages from system Python
+# Create virtual env in /opt/venv which isolated Python packages from the system Python
 RUN python3 -m venv /opt/venv
 # Modifies PATH and puts the venv bin directory as first in PATH
 ENV PATH="/opt/venv/bin:$PATH"
@@ -296,7 +296,7 @@ CMD ["python", "app.py"]
 ```
 
 **[Explanation](https://pythonspeed.com/articles/activate-virtualenv-dockerfile/)**  
-The most important part is setting PATH: PATH is a list of directories which are searched for commands to run. `activate` simply adds the virtualenv’s `bin/` directory to the start of the list, so when python command is executed system first checks the `/opt/venv/bin`, where it find our venv python and uses it instead of system Python.  
+The most important part is setting PATH: PATH is a list of directories that are searched for commands to run. `activate` simply adds the virtualenv’s `bin/` directory to the start of the list, so when the python command is executed system first checks the `/opt/venv/bin`, where it finds our venv python and uses it instead of system Python.  
 **We can replace activate by setting the appropriate environment variables: Docker’s ENV command applies both subsequent RUNs as well as to the CMD.**
 
 
@@ -306,7 +306,7 @@ When pip installs packages, it keeps a cache of downloaded wheel files and sourc
 ✅ **Good:**
 ```dockerfile
 RUN pip install --no-cache-dir -r requirements.txt
-# Creates minimal layer with just the installed packages
+# Creates a minimal layer with just the installed packages
 ```
 ❌ **Bad:**
 ```dockerfile
@@ -315,7 +315,7 @@ RUN pip install -r requirements.txt
 ```
 
 ## 12. Order layers by change frequency - put the most stable commands first
-Docker uses a layer caching system during builds. Organizing layers by change frequency dramatically improves build performance.
+Docker uses a layer caching system during builds. Organizing layers by changing frequency dramatically improves build performance.
 
 ✅ **Good:**
 1. Base Image: Rarely changes; placed first.
@@ -389,7 +389,7 @@ WORKDIR /app             # Good
 RUN cd /app && command   # Bad
 ```
 
-## 15. Use Build time arguments for flexibility
+## 15. Use Build-time arguments for flexibility
 Build-time arguments (ARG) provide a way to pass configuration options to your Docker build process. This is especially useful when you need different configurations for different environments (e.g., development, staging, production) without modifying the Dockerfile itself.
 
 ```dockerfile
@@ -403,7 +403,7 @@ docker build --build-arg PORT=8080 -t myapp .
 ```
 
 
-## 16. Use `--chmod` in `COPY` instead of seperate `RUN`
+## 16. Use `--chmod` in `COPY` instead of separate `RUN`
 The `--chmod` flag in `COPY` or `ADD` allows you to set file permissions during the copy process, eliminating the need for additional `RUN` commands. This reduces the number of layers in your image and improves build performance.
 
 ✅ **Good:**
